@@ -1,0 +1,16 @@
+package com.prueba.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class DetalleVentaResponse {
+    private Long id;
+    private Long productoId;
+    private Integer cantidad;
+    private Double precioUnitario;
+    private Double subtotal;
+}
