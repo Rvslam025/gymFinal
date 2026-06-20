@@ -1,5 +1,10 @@
 package com.prueba.service;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.prueba.dto.ClienteRequest;
 import com.prueba.dto.ClienteResponse;
 import com.prueba.exception.ConflictException;
@@ -7,11 +12,8 @@ import com.prueba.exception.NotFoundException;
 import com.prueba.mapper.ClienteMapper;
 import com.prueba.model.Cliente;
 import com.prueba.repository.ClienteRepository;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -79,11 +81,18 @@ public class ClienteService {
     }
 
     public void eliminar(Long id) {
-        log.info("Eliminando cliente con id: {}", id);
-        if (!clienteRepository.existsById(id)) {
-            throw new NotFoundException("No se encontró el cliente con id " + id);
-        }
-        clienteRepository.deleteById(id);
-        log.info("Cliente eliminado correctamente con id: {}", id);
+    log.info("Eliminando cliente con id: {}", id);
+    
+  
+    Cliente cliente = clienteRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("No se encontró el cliente con id " + id));
+    
+    
+    cliente.setActivo(false);
+    
+
+    clienteRepository.save(cliente);
+    
+    log.info("Cliente desactivado correctamente con id: {}", id);
     }
 }
