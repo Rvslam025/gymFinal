@@ -18,7 +18,7 @@ El sistema permite administrar clientes, membresías, clases, reservas, ventas, 
 
 ## Tecnologías utilizadas
 
-- Java 17
+- Java 21
 - Spring Boot 3
 - Spring Data JPA
 - Spring Web
@@ -140,9 +140,10 @@ Relaciones implementadas:
 
 Cada microservicio incluye manejo global de excepciones mediante:
 
-- ResourceNotFoundException
+- NotFoundException
 - BusinessException
 - GlobalExceptionHandler
+- ConflictException
 
 Respuestas estructuradas con:
 
