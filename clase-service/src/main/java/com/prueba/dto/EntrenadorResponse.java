@@ -1,20 +1,32 @@
 package com.prueba.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Schema(description = "Información de microservicio entrenador con datos de entrenador de gimnasio")
 public class EntrenadorResponse {
 
+    @Schema(description = "Identificador único del entrenador", example = "1")
     private Long id;
-    private String nombre;
-    private String especialidad;
-    private String telefono;
-    private Boolean activo;
 
+    @Schema(description = "Nombre completo del entrenador",
+            example = "Pedro González")
+    private String nombre;
+
+    @Schema(description = "Especialidad del entrenador",
+            example = "Calistenia")
+    private String especialidad;
+
+    @Schema(description = "Número telefónico del entrenador",
+            example = "+56998765432")
+    private String telefono;
+
+    @Schema(description = "Indica si el entrenador se encuentra activo",
+            example = "true")
+    private Boolean activo;
 }
