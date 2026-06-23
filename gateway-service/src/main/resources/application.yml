@@ -1,0 +1,206 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+
+  cloud:
+    gateway:
+      # Tiempo de espera global para conexiones y respuestas
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 10s
+
+      routes:
+
+
+        # cliente-service  ->  puerto 8081
+
+        - id: cliente-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/clientes/**
+          filters:
+            - StripPrefix=0
+
+
+        # entrenador-service  ->  puerto 8082
+
+        - id: entrenador-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/entrenadores/**
+          filters:
+            - StripPrefix=0
+
+
+        # tipomembresia-service  ->  puerto 8083
+
+        - id: tipomembresia-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/tipos-membresias/**
+          filters:
+            - StripPrefix=0
+
+
+        # clase-service  ->  puerto 8084
+
+        - id: clase-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/clases/**
+          filters:
+            - StripPrefix=0
+
+
+        # membresia-service  ->  puerto 8085
+
+        - id: membresia-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/membresias/**
+          filters:
+            - StripPrefix=0
+
+
+        # producto-service  ->  puerto 8086
+
+        - id: producto-service
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/productos/**
+          filters:
+            - StripPrefix=0
+
+        - id: categoria-service
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/categorias/**
+          filters:
+            - StripPrefix=0
+
+
+        # reserva-service  ->  puerto 8087
+
+        - id: reserva-service
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/reservas/**
+          filters:
+            - StripPrefix=0
+
+
+        # asistencia-service  ->  puerto 8088
+
+        - id: asistencia-service
+          uri: http://localhost:8088
+          predicates:
+            - Path=/api/asistencias/**
+          filters:
+            - StripPrefix=0
+
+
+        # venta-service  ->  puerto 8089
+
+        - id: venta-service
+          uri: http://localhost:8089
+          predicates:
+            - Path=/api/ventas/**
+          filters:
+            - StripPrefix=0
+
+
+        # pago-service  ->  puerto 8090
+
+        - id: pago-service
+          uri: http://localhost:8090
+          predicates:
+            - Path=/api/pagos/**
+          filters:
+            - StripPrefix=0
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, routes
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: INFO
+
+---
+
+# PERFIL DOCKER  (activar con: --spring.profiles.active=docker)
+# En Docker cada servicio se llama por su nombre de contenedor
+
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  cloud:
+    gateway:
+      routes:
+
+        - id: cliente-service
+          uri: http://cliente-service:8081
+          predicates:
+            - Path=/api/clientes/**
+
+        - id: entrenador-service
+          uri: http://entrenador-service:8082
+          predicates:
+            - Path=/api/entrenadores/**
+
+        - id: tipomembresia-service
+          uri: http://tipomembresia-service:8083
+          predicates:
+            - Path=/api/tipos-membresias/**
+
+        - id: clase-service
+          uri: http://clase-service:8084
+          predicates:
+            - Path=/api/clases/**
+
+        - id: membresia-service
+          uri: http://membresia-service:8085
+          predicates:
+            - Path=/api/membresias/**
+
+        - id: producto-service
+          uri: http://producto-service:8086
+          predicates:
+            - Path=/api/productos/**
+
+        - id: categoria-service
+          uri: http://producto-service:8086
+          predicates:
+            - Path=/api/categorias/**
+
+        - id: reserva-service
+          uri: http://reserva-service:8087
+          predicates:
+            - Path=/api/reservas/**
+
+        - id: asistencia-service
+          uri: http://asistencia-service:8088
+          predicates:
+            - Path=/api/asistencias/**
+
+        - id: venta-service
+          uri: http://venta-service:8089
+          predicates:
+            - Path=/api/ventas/**
+
+        - id: pago-service
+          uri: http://pago-service:8090
+          predicates:
+            - Path=/api/pagos/**
