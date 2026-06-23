@@ -20,7 +20,7 @@ public class ClaseClient {
     private final WebClient webClient;
 
     public ClaseClient(
-            @Value("${services.clase.url:http://localhost:8081}")
+            @Value("${services.clase.url:http://localhost:8084}")
             String claseUrl
     ) {
         this.webClient = WebClient.builder()

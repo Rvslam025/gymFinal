@@ -234,16 +234,17 @@ Cada microservicio debe ejecutarse en puerto diferente.
 
 Ejemplo:
 
-- 8081 → asistencia-service
-- 8082 → membresia-service
-- 8083 → cliente-service
-- 8084 → clase-service
-- 8085 → producto-service
-- 8086 → entrenador-service
-- 8087 → reserva-service
-- 8088 → pago-service
-- 8089 → venta-service
-- 8090 → tipomembresia-service
+8080 -> gateway-service
+8081 -> cliente-service
+8082 -> entrenador-service
+8083 -> tipomembresia-service
+8084 -> clase-service
+8085 -> membresia-service
+8086 -> producto-service
+8087 -> reserva-service
+8088 -> asistencia-service
+8089 -> venta-service
+8090 -> pago-service
 
 ---
 

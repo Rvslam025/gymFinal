@@ -16,6 +16,7 @@
 	<description>Sistema de Gestión de Gimnasio</description>
 
 	<modules>
+		<module>gateway-service</module>
 		<module>asistencia-service</module>
 		<module>membresia-service</module>
 		<module>clase-service</module>
