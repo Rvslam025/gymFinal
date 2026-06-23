@@ -10,7 +10,8 @@ spring:
 
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations: classpath:bd/migration
+    table: flyway_schema_history_venta
 
   jpa:
     hibernate:
@@ -24,6 +25,13 @@ spring:
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /doc/swagger-ui.html
+
 server:
   port: 8089
 
@@ -31,3 +39,9 @@ logging:
   level:
     com.prueba: DEBUG
     org.springframework.web: INFO
+
+services:
+  cliente:
+    url: http://localhost:8081
+  producto:
+    url: http://localhost:8086
