@@ -1,0 +1,13 @@
+# Ignorar artefactos de compilación locales
+**/target/
+**/.git/
+**/.idea/
+**/.mvn/
+**/*.iml
+
+# Logs y temporales
+**/*.log
+**/logs/
+
+# Variables de entorno locales
+**/.env

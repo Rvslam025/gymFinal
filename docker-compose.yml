@@ -1,0 +1,250 @@
+services:
+
+  # ─────────────────────────────────────────────
+  #  BASE DE DATOS
+  # ─────────────────────────────────────────────
+  mysql:
+    image: mysql:8.4
+    container_name: gym-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: gym_cliente
+      MYSQL_USER: gym
+      MYSQL_PASSWORD: gym
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ugym", "-pgym"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - gym-network
+
+  # ─────────────────────────────────────────────
+  #  MICROSERVICIOS DE NEGOCIO
+  # ─────────────────────────────────────────────
+  cliente-service:
+    build:
+      context: .
+      dockerfile: cliente-service/Dockerfile
+      args:
+        SERVICE_DIR: cliente-service
+    container_name: gym-cliente
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gym-network
+
+  entrenador-service:
+    build:
+      context: .
+      dockerfile: entrenador-service/Dockerfile
+      args:
+        SERVICE_DIR: entrenador-service
+    container_name: gym-entrenador
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gym-network
+
+  tipomembresia-service:
+    build:
+      context: .
+      dockerfile: tipomembresia-Service/Dockerfile
+      args:
+        SERVICE_DIR: tipomembresia-Service
+    container_name: gym-tipomembresia
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8083:8083"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gym-network
+
+  clase-service:
+    build:
+      context: .
+      dockerfile: clase-service/Dockerfile
+      args:
+        SERVICE_DIR: clase-service
+    container_name: gym-clase
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8084:8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gym-network
+
+  membresia-service:
+    build:
+      context: .
+      dockerfile: membresia-service/Dockerfile
+      args:
+        SERVICE_DIR: membresia-service
+    container_name: gym-membresia
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8085:8085"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gym-network
+
+  producto-service:
+    build:
+      context: .
+      dockerfile: producto-service/Dockerfile
+      args:
+        SERVICE_DIR: producto-service
+    container_name: gym-producto
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8086:8086"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gym-network
+
+  reserva-service:
+    build:
+      context: .
+      dockerfile: reserva-service/Dockerfile
+      args:
+        SERVICE_DIR: reserva-service
+    container_name: gym-reserva
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8087:8087"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gym-network
+
+  asistencia-service:
+    build:
+      context: .
+      dockerfile: asistencia-service/Dockerfile
+      args:
+        SERVICE_DIR: asistencia-service
+    container_name: gym-asistencia
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8088:8088"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      membresia-service:
+        condition: service_started
+    networks:
+      - gym-network
+
+  venta-service:
+    build:
+      context: .
+      dockerfile: venta-service/Dockerfile
+      args:
+        SERVICE_DIR: venta-service
+    container_name: gym-venta
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8089:8089"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gym-network
+
+  pago-service:
+    build:
+      context: .
+      dockerfile: pago-service/Dockerfile
+      args:
+        SERVICE_DIR: pago-service
+    container_name: gym-pago
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8090:8090"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - gym-network
+
+  # ─────────────────────────────────────────────
+  #  API GATEWAY (levanta último)
+  # ─────────────────────────────────────────────
+  gateway-service:
+    build:
+      context: .
+      dockerfile: gateway-service/Dockerfile
+      args:
+        SERVICE_DIR: gateway-service
+    container_name: gym-gateway
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8080:8080"
+    depends_on:
+      - cliente-service
+      - entrenador-service
+      - tipomembresia-service
+      - clase-service
+      - membresia-service
+      - producto-service
+      - reserva-service
+      - asistencia-service
+      - venta-service
+      - pago-service
+    networks:
+      - gym-network
+
+# ─────────────────────────────────────────────
+#  VOLÚMENES Y RED
+# ─────────────────────────────────────────────
+volumes:
+  mysql_data:
+
+networks:
+  gym-network:
+    driver: bridge
