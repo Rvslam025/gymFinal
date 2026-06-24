@@ -3,7 +3,7 @@ spring:
     name: venta-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/gym_cliente?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3307/gym_cliente?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: ""
     driver-class-name: com.mysql.cj.jdbc.Driver

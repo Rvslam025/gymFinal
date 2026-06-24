@@ -13,7 +13,7 @@ services:
       MYSQL_USER: gym
       MYSQL_PASSWORD: gym
     ports:
-      - "3306:3306"
+      - "3307:3307"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
