@@ -47,3 +47,21 @@ services:
     url: http://localhost:8085
   venta:
     url: http://localhost:8089
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:mysql://mysql:3306/gym_cliente?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: gym
+    password: gym
+
+services:
+  cliente:
+    url: http://cliente-service:8081
+  membresia:
+    url: http://membresia-service:8085
+  venta:
+    url: http://venta-service:8089

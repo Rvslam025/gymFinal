@@ -45,3 +45,19 @@ services:
     url: http://localhost:8081
   producto:
     url: http://localhost:8086
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:mysql://mysql:3306/gym_cliente?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: gym
+    password: gym
+
+services:
+  cliente:
+    url: http://cliente-service:8081
+  producto:
+    url: http://producto-service:8086

@@ -39,3 +39,13 @@ logging:
   level:
     com.prueba: DEBUG
     org.springframework.web: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:mysql://mysql:3306/gym_cliente?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: gym
+    password: gym

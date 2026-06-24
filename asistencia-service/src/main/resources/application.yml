@@ -43,3 +43,17 @@ logging:
 services:
   membresia:
     url: http://localhost:8085
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:mysql://mysql:3306/gym_cliente?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: gym
+    password: gym
+
+services:
+  membresia:
+    url: http://membresia-service:8085

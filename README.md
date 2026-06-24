@@ -248,6 +248,131 @@ Ejemplo:
 
 ---
 
+## Ejecucion con Docker
+
+El proyecto incluye un `docker-compose.yml` para levantar MySQL, los microservicios del dominio y el API Gateway.
+
+### Requisitos
+
+- Docker Desktop abierto y en estado "Running".
+- Internet disponible la primera vez, porque Docker descarga imagenes base y Maven descarga dependencias.
+- Ejecutar los comandos desde la raiz del proyecto.
+
+```powershell
+cd C:\Users\WARRIOR\Desktop\gymFinal-master\gymFinal
+```
+
+### Levantar todo el sistema
+
+Primera ejecucion o despues de cambios importantes:
+
+```powershell
+docker compose up -d --build
+```
+
+Ejecuciones siguientes:
+
+```powershell
+docker compose up -d
+```
+
+Verificar contenedores:
+
+```powershell
+docker compose ps
+```
+
+Ver logs generales:
+
+```powershell
+docker compose logs -f
+```
+
+Ver logs de un servicio especifico:
+
+```powershell
+docker compose logs -f gateway-service
+docker compose logs -f cliente-service
+```
+
+### Puertos disponibles
+
+- Gateway: http://localhost:8080
+- Cliente: http://localhost:8081
+- Entrenador: http://localhost:8082
+- Tipo membresia: http://localhost:8083
+- Clase: http://localhost:8084
+- Membresia: http://localhost:8085
+- Producto: http://localhost:8086
+- Reserva: http://localhost:8087
+- Asistencia: http://localhost:8088
+- Venta: http://localhost:8089
+- Pago: http://localhost:8090
+- MySQL en Docker: localhost:3307, base de datos `gym_cliente`, usuario `gym`, password `gym`
+
+### Pruebas rapidas para la defensa
+
+Revisar estado del Gateway:
+
+```powershell
+curl http://localhost:8080/actuator/health
+```
+
+Revisar rutas cargadas en Gateway:
+
+```powershell
+curl http://localhost:8080/actuator/gateway/routes
+```
+
+Probar un microservicio directo:
+
+```powershell
+curl http://localhost:8081/api/clientes
+```
+
+Probar el mismo microservicio pasando por Gateway:
+
+```powershell
+curl http://localhost:8080/api/clientes
+```
+
+Abrir Swagger de un servicio:
+
+```text
+http://localhost:8081/doc/swagger-ui.html
+http://localhost:8086/doc/swagger-ui.html
+http://localhost:8090/doc/swagger-ui.html
+```
+
+Tambien se puede ejecutar una prueba rapida automatizada:
+
+```powershell
+.\scripts\probar-docker.ps1
+```
+
+### Apagar el sistema
+
+Apagar conservando datos de MySQL:
+
+```powershell
+docker compose down
+```
+
+Apagar y borrar la base de datos Docker para empezar limpio:
+
+```powershell
+docker compose down -v
+```
+
+### Explicacion tecnica breve
+
+- `docker-compose.yml` crea una red interna para que los contenedores se comuniquen por nombre.
+- En ejecucion local los YAML usan `localhost`, por ejemplo `http://localhost:8081`.
+- En ejecucion Docker se activa `SPRING_PROFILES_ACTIVE=docker`; con ese perfil los servicios usan nombres internos como `mysql`, `cliente-service`, `membresia-service` y `producto-service`.
+- El Gateway queda en el puerto `8080` y centraliza las rutas `/api/clientes/**`, `/api/membresias/**`, `/api/productos/**`, `/api/pagos/**`, entre otras.
+
+---
+
 ## Estado del proyecto
 
 Proyecto finalizado y funcional para evaluación académica.
