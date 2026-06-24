@@ -378,6 +378,82 @@ docker compose down -v
 Proyecto finalizado y funcional para evaluación académica.
 
 ---
+Sistema de Gestión de Gimnasio - Arquitectura de Microservicios
+Rutas principales del API Gateway
+
+El sistema utiliza Spring Cloud Gateway como punto único de acceso a los microservicios.
+
+http://localhost:8084/doc/swagger-ui.html
+
+Servicio	Ruta Gateway
+Cliente Service	http://localhost:8080/api/clientes
+Entrenador Service	http://localhost:8080/api/entrenadores
+Tipo Membresía Service	http://localhost:8080/api/tipos-membresias
+Membresía Service	http://localhost:8080/api/membresias
+Clase Service	http://localhost:8080/api/clases
+Reserva Service	http://localhost:8080/api/reservas
+Producto Service	http://localhost:8080/api/productos
+Venta Service	http://localhost:8080/api/ventas
+Pago Service	http://localhost:8080/api/pagos
+Asistencia Service	http://localhost:8080/api/asistencias
+Documentación Swagger
+
+La documentación de cada microservicio puede consultarse mediante Swagger UI.
+
+Servicio	Swagger UI
+Cliente Service	http://localhost:8081/swagger-ui/index.html
+Entrenador Service	http://localhost:8082/swagger-ui/index.html
+Tipo Membresía Service	http://localhost:8083/swagger-ui/index.html
+Clase Service	http://localhost:8084/swagger-ui/index.html
+Membresía Service	http://localhost:8085/swagger-ui/index.html
+Producto Service	http://localhost:8086/swagger-ui/index.html
+Reserva Service	http://localhost:8087/swagger-ui/index.html
+Asistencia Service	http://localhost:8088/swagger-ui/index.html
+Venta Service	http://localhost:8089/swagger-ui/index.html
+Pago Service	http://localhost:8090/swagger-ui/index.html
+Pruebas Unitarias
+
+El proyecto incorpora pruebas unitarias para validar la lógica de negocio de los microservicios.
+
+Objetivos alcanzados:
+
+Validación de servicios y controladores.
+Pruebas de creación, modificación, consulta y eliminación de registros.
+Validación de excepciones y reglas de negocio.
+Cobertura mínima esperada: 80%.
+
+Para ejecutar las pruebas:
+
+mvn test
+
+Para generar el reporte de cobertura:
+
+mvn verify
+
+Convención de Commits
+
+Se utilizó una estrategia de commits descriptivos y técnicos para facilitar la trazabilidad de los cambios.
+
+Ejemplos:
+
+feat(cliente): implementar CRUD de clientes
+feat(producto): agregar validaciones de stock
+feat(clase): integrar horarios y relaciones JPA
+feat(gateway): configurar rutas de microservicios
+docs(swagger): documentar endpoints de reservas
+refactor(service): optimizar lógica de membresías
+fix(reserva): corregir validación de cupos disponibles
+test(cliente): agregar pruebas unitarias del servicio
+
+No se utilizaron mensajes genéricos como:
+
+cambios
+actualización
+prueba
+arreglo
+commit final
+
+Todos los commits describen de forma técnica y precisa la modificación realizada.
 
 ## Autoría
 
