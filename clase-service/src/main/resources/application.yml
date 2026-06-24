@@ -25,6 +25,10 @@ spring:
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 
+services:
+  entrenador:
+    url: http://localhost:8082
+
 springdoc:
   api-docs:
     enabled: true
@@ -39,7 +43,3 @@ logging:
   level:
     com.prueba: DEBUG
     org.springframework.web: INFO
-
-services:
-  entrenador:
-    url: http://localhost:8082
