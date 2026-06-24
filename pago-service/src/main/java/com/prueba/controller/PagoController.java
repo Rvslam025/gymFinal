@@ -10,11 +10,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("/api/pagos")
@@ -34,14 +38,17 @@ public class PagoController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Pago registrado correctamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos"),
-            @ApiResponse(responseCode = "404", description = "Membresía no encontrada")
+            @ApiResponse(responseCode = "404", description = "Venta no encontrada")
     })
     @PostMapping
-    public ResponseEntity<PagoResponse> crear(
+    public ResponseEntity<EntityModel<PagoResponse>> crear(
             @Valid @RequestBody PagoRequest request
     ) {
+
+        PagoResponse pago = pagoService.crear(request);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(pagoService.crear(request));
+                .body(toModel(pago));
     }
 
     @Operation(
@@ -52,10 +59,20 @@ public class PagoController {
             @ApiResponse(responseCode = "200", description = "Operación exitosa")
     })
     @GetMapping
-    public ResponseEntity<List<PagoResponse>> obtenerPagos() {
-        return ResponseEntity.ok(
-                pagoService.obtenerPagos()
-        );
+    public ResponseEntity<CollectionModel<EntityModel<PagoResponse>>> obtenerPagos() {
+
+        List<EntityModel<PagoResponse>> pagos = pagoService.obtenerPagos()
+                .stream()
+                .map(this::toModel)
+                .toList();
+
+        CollectionModel<EntityModel<PagoResponse>> collection =
+                CollectionModel.of(pagos);
+
+        collection.add(linkTo(PagoController.class).withSelfRel());
+        collection.add(linkTo(PagoController.class).withRel("crear"));
+
+        return ResponseEntity.ok(collection);
     }
 
     @Operation(
@@ -67,7 +84,7 @@ public class PagoController {
             @ApiResponse(responseCode = "404", description = "Pago no encontrado")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<PagoResponse> obtenerPago(
+    public ResponseEntity<EntityModel<PagoResponse>> obtenerPago(
             @Parameter(
                     description = "Identificador único del pago",
                     example = "1",
@@ -75,8 +92,9 @@ public class PagoController {
             )
             @PathVariable Long id
     ) {
+
         return ResponseEntity.ok(
-                pagoService.obtenerPago(id)
+                toModel(pagoService.obtenerPago(id))
         );
     }
 
@@ -97,7 +115,26 @@ public class PagoController {
             )
             @PathVariable Long id
     ) {
+
         pagoService.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private EntityModel<PagoResponse> toModel(PagoResponse pago) {
+
+        return EntityModel.of(
+                pago,
+
+                linkTo(PagoController.class)
+                        .slash(pago.getId())
+                        .withSelfRel(),
+
+                linkTo(PagoController.class)
+                        .withRel("pagos"),
+
+                linkTo(PagoController.class)
+                        .slash(pago.getId())
+                        .withRel("eliminar")
+        );
     }
 }

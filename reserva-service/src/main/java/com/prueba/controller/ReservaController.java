@@ -10,11 +10,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("/api/reservas")
@@ -38,11 +42,14 @@ public class ReservaController {
             @ApiResponse(responseCode = "409", description = "La reserva ya existe o no hay cupos disponibles")
     })
     @PostMapping
-    public ResponseEntity<ReservaResponse> crear(
+    public ResponseEntity<EntityModel<ReservaResponse>> crear(
             @Valid @RequestBody ReservaRequest request
     ) {
+
+        ReservaResponse reserva = reservaService.crear(request);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(reservaService.crear(request));
+                .body(toModel(reserva));
     }
 
     @Operation(
@@ -53,10 +60,20 @@ public class ReservaController {
             @ApiResponse(responseCode = "200", description = "Operación exitosa")
     })
     @GetMapping
-    public ResponseEntity<List<ReservaResponse>> obtenerReservas() {
-        return ResponseEntity.ok(
-                reservaService.obtenerReservas()
-        );
+    public ResponseEntity<CollectionModel<EntityModel<ReservaResponse>>> obtenerReservas() {
+
+        List<EntityModel<ReservaResponse>> reservas = reservaService.obtenerReservas()
+                .stream()
+                .map(this::toModel)
+                .toList();
+
+        CollectionModel<EntityModel<ReservaResponse>> collection =
+                CollectionModel.of(reservas);
+
+        collection.add(linkTo(ReservaController.class).withSelfRel());
+        collection.add(linkTo(ReservaController.class).withRel("crear"));
+
+        return ResponseEntity.ok(collection);
     }
 
     @Operation(
@@ -68,7 +85,7 @@ public class ReservaController {
             @ApiResponse(responseCode = "404", description = "Reserva no encontrada")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ReservaResponse> obtenerReserva(
+    public ResponseEntity<EntityModel<ReservaResponse>> obtenerReserva(
             @Parameter(
                     description = "Identificador único de la reserva",
                     example = "1",
@@ -76,8 +93,9 @@ public class ReservaController {
             )
             @PathVariable Long id
     ) {
+
         return ResponseEntity.ok(
-                reservaService.obtenerReserva(id)
+                toModel(reservaService.obtenerReserva(id))
         );
     }
 
@@ -91,7 +109,7 @@ public class ReservaController {
             @ApiResponse(responseCode = "404", description = "Reserva no encontrada")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<ReservaResponse> modificar(
+    public ResponseEntity<EntityModel<ReservaResponse>> modificar(
             @Parameter(
                     description = "Identificador único de la reserva a modificar",
                     example = "1",
@@ -100,8 +118,9 @@ public class ReservaController {
             @PathVariable Long id,
             @Valid @RequestBody ReservaRequest request
     ) {
+
         return ResponseEntity.ok(
-                reservaService.modificar(id, request)
+                toModel(reservaService.modificar(id, request))
         );
     }
 
@@ -122,7 +141,30 @@ public class ReservaController {
             )
             @PathVariable Long id
     ) {
+
         reservaService.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private EntityModel<ReservaResponse> toModel(ReservaResponse reserva) {
+
+        return EntityModel.of(
+                reserva,
+
+                linkTo(ReservaController.class)
+                        .slash(reserva.getId())
+                        .withSelfRel(),
+
+                linkTo(ReservaController.class)
+                        .withRel("reservas"),
+
+                linkTo(ReservaController.class)
+                        .slash(reserva.getId())
+                        .withRel("actualizar"),
+
+                linkTo(ReservaController.class)
+                        .slash(reserva.getId())
+                        .withRel("eliminar")
+        );
     }
 }

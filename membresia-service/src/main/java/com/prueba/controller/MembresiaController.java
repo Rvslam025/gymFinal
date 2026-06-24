@@ -10,11 +10,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("/api/membresias")
@@ -37,11 +41,14 @@ public class MembresiaController {
             @ApiResponse(responseCode = "409", description = "La membresía ya existe")
     })
     @PostMapping
-    public ResponseEntity<MembresiaResponse> crear(
+    public ResponseEntity<EntityModel<MembresiaResponse>> crear(
             @Valid @RequestBody MembresiaRequest request
     ) {
+
+        MembresiaResponse membresia = membresiaService.crear(request);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(membresiaService.crear(request));
+                .body(toModel(membresia));
     }
 
     @Operation(
@@ -52,10 +59,20 @@ public class MembresiaController {
             @ApiResponse(responseCode = "200", description = "Operación exitosa")
     })
     @GetMapping
-    public ResponseEntity<List<MembresiaResponse>> listar() {
-        return ResponseEntity.ok(
-                membresiaService.listar()
-        );
+    public ResponseEntity<CollectionModel<EntityModel<MembresiaResponse>>> listar() {
+
+        List<EntityModel<MembresiaResponse>> membresias = membresiaService.listar()
+                .stream()
+                .map(this::toModel)
+                .toList();
+
+        CollectionModel<EntityModel<MembresiaResponse>> collection =
+                CollectionModel.of(membresias);
+
+        collection.add(linkTo(MembresiaController.class).withSelfRel());
+        collection.add(linkTo(MembresiaController.class).withRel("crear"));
+
+        return ResponseEntity.ok(collection);
     }
 
     @Operation(
@@ -67,7 +84,7 @@ public class MembresiaController {
             @ApiResponse(responseCode = "404", description = "Membresía no encontrada")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<MembresiaResponse> obtenerPorId(
+    public ResponseEntity<EntityModel<MembresiaResponse>> obtenerPorId(
             @Parameter(
                     description = "ID de la membresía",
                     example = "1",
@@ -75,8 +92,9 @@ public class MembresiaController {
             )
             @PathVariable Long id
     ) {
+
         return ResponseEntity.ok(
-                membresiaService.obtenerPorId(id)
+                toModel(membresiaService.obtenerPorId(id))
         );
     }
 
@@ -90,7 +108,7 @@ public class MembresiaController {
             @ApiResponse(responseCode = "404", description = "Membresía no encontrada")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<MembresiaResponse> modificar(
+    public ResponseEntity<EntityModel<MembresiaResponse>> modificar(
             @Parameter(
                     description = "ID de la membresía a modificar",
                     example = "1",
@@ -99,8 +117,9 @@ public class MembresiaController {
             @PathVariable Long id,
             @Valid @RequestBody MembresiaRequest request
     ) {
+
         return ResponseEntity.ok(
-                membresiaService.modificar(id, request)
+                toModel(membresiaService.modificar(id, request))
         );
     }
 
@@ -121,6 +140,7 @@ public class MembresiaController {
             )
             @PathVariable Long id
     ) {
+
         membresiaService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
@@ -142,8 +162,43 @@ public class MembresiaController {
             )
             @PathVariable Long clienteId
     ) {
+
         return ResponseEntity.ok(
                 membresiaService.validarActiva(clienteId)
         );
+    }
+
+    private EntityModel<MembresiaResponse> toModel(MembresiaResponse membresia) {
+
+        EntityModel<MembresiaResponse> model = EntityModel.of(
+                membresia,
+
+                linkTo(MembresiaController.class)
+                        .slash(membresia.getId())
+                        .withSelfRel(),
+
+                linkTo(MembresiaController.class)
+                        .withRel("membresias"),
+
+                linkTo(MembresiaController.class)
+                        .slash(membresia.getId())
+                        .withRel("actualizar"),
+
+                linkTo(MembresiaController.class)
+                        .slash(membresia.getId())
+                        .withRel("eliminar")
+        );
+
+        if (Boolean.TRUE.equals(membresia.getActiva())) {
+
+            model.add(
+                    linkTo(MembresiaController.class)
+                            .slash("activa")
+                            .slash(membresia.getClienteId())
+                            .withRel("validar-activa")
+            );
+        }
+
+        return model;
     }
 }

@@ -10,11 +10,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("/api/entrenadores")
@@ -37,11 +41,14 @@ public class EntrenadorController {
             @ApiResponse(responseCode = "409", description = "El entrenador ya existe")
     })
     @PostMapping
-    public ResponseEntity<EntrenadorResponse> crear(
+    public ResponseEntity<EntityModel<EntrenadorResponse>> crear(
             @Valid @RequestBody EntrenadorRequest request
     ) {
+
+        EntrenadorResponse entrenador = entrenadorService.crear(request);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(entrenadorService.crear(request));
+                .body(toModel(entrenador));
     }
 
     @Operation(
@@ -52,10 +59,20 @@ public class EntrenadorController {
             @ApiResponse(responseCode = "200", description = "Operación exitosa")
     })
     @GetMapping
-    public ResponseEntity<List<EntrenadorResponse>> obtenerEntrenadores() {
-        return ResponseEntity.ok(
-                entrenadorService.obtenerEntrenadores()
-        );
+    public ResponseEntity<CollectionModel<EntityModel<EntrenadorResponse>>> obtenerEntrenadores() {
+
+        List<EntityModel<EntrenadorResponse>> entrenadores = entrenadorService.obtenerEntrenadores()
+                .stream()
+                .map(this::toModel)
+                .toList();
+
+        CollectionModel<EntityModel<EntrenadorResponse>> collection =
+                CollectionModel.of(entrenadores);
+
+        collection.add(linkTo(EntrenadorController.class).withSelfRel());
+        collection.add(linkTo(EntrenadorController.class).withRel("crear"));
+
+        return ResponseEntity.ok(collection);
     }
 
     @Operation(
@@ -67,7 +84,7 @@ public class EntrenadorController {
             @ApiResponse(responseCode = "404", description = "Entrenador no encontrado")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<EntrenadorResponse> obtenerEntrenador(
+    public ResponseEntity<EntityModel<EntrenadorResponse>> obtenerEntrenador(
             @Parameter(
                     description = "ID del entrenador",
                     example = "1",
@@ -76,7 +93,7 @@ public class EntrenadorController {
             @PathVariable Long id
     ) {
         return ResponseEntity.ok(
-                entrenadorService.obtenerEntrenador(id)
+                toModel(entrenadorService.obtenerEntrenador(id))
         );
     }
 
@@ -90,7 +107,7 @@ public class EntrenadorController {
             @ApiResponse(responseCode = "404", description = "Entrenador no encontrado")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<EntrenadorResponse> modificar(
+    public ResponseEntity<EntityModel<EntrenadorResponse>> modificar(
             @Parameter(
                     description = "ID del entrenador a modificar",
                     example = "1",
@@ -100,7 +117,7 @@ public class EntrenadorController {
             @Valid @RequestBody EntrenadorRequest request
     ) {
         return ResponseEntity.ok(
-                entrenadorService.modificar(id, request)
+                toModel(entrenadorService.modificar(id, request))
         );
     }
 
@@ -124,4 +141,36 @@ public class EntrenadorController {
         entrenadorService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
+
+    private EntityModel<EntrenadorResponse> toModel(EntrenadorResponse entrenador) {
+
+        EntityModel<EntrenadorResponse> model = EntityModel.of(
+                entrenador,
+                linkTo(EntrenadorController.class)
+                        .slash(entrenador.getId())
+                        .withSelfRel(),
+
+                linkTo(EntrenadorController.class)
+                        .withRel("entrenadores"),
+
+                linkTo(EntrenadorController.class)
+                        .slash(entrenador.getId())
+                        .withRel("actualizar"),
+
+                linkTo(EntrenadorController.class)
+                        .slash(entrenador.getId())
+                        .withRel("eliminar")
+        );
+
+        if (Boolean.TRUE.equals(entrenador.getActivo())) {
+            model.add(
+                    linkTo(EntrenadorController.class)
+                            .slash(entrenador.getId())
+                            .withRel("desactivar")
+            );
+        }
+
+        return model;
+    }
 }
+

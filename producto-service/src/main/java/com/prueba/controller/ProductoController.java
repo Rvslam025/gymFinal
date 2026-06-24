@@ -10,11 +10,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -37,11 +41,14 @@ public class ProductoController {
             @ApiResponse(responseCode = "409", description = "El producto ya existe")
     })
     @PostMapping
-    public ResponseEntity<ProductoResponse> crear(
+    public ResponseEntity<EntityModel<ProductoResponse>> crear(
             @Valid @RequestBody ProductoRequest request
     ) {
+
+        ProductoResponse producto = productoService.crear(request);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(productoService.crear(request));
+                .body(toModel(producto));
     }
 
     @Operation(
@@ -52,10 +59,20 @@ public class ProductoController {
             @ApiResponse(responseCode = "200", description = "Operación exitosa")
     })
     @GetMapping
-    public ResponseEntity<List<ProductoResponse>> obtenerProductos() {
-        return ResponseEntity.ok(
-                productoService.obtenerProductos()
-        );
+    public ResponseEntity<CollectionModel<EntityModel<ProductoResponse>>> obtenerProductos() {
+
+        List<EntityModel<ProductoResponse>> productos = productoService.obtenerProductos()
+                .stream()
+                .map(this::toModel)
+                .toList();
+
+        CollectionModel<EntityModel<ProductoResponse>> collection =
+                CollectionModel.of(productos);
+
+        collection.add(linkTo(ProductoController.class).withSelfRel());
+        collection.add(linkTo(ProductoController.class).withRel("crear"));
+
+        return ResponseEntity.ok(collection);
     }
 
     @Operation(
@@ -67,7 +84,7 @@ public class ProductoController {
             @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ProductoResponse> obtenerProducto(
+    public ResponseEntity<EntityModel<ProductoResponse>> obtenerProducto(
             @Parameter(
                     description = "Identificador único del producto",
                     example = "1",
@@ -75,8 +92,9 @@ public class ProductoController {
             )
             @PathVariable Long id
     ) {
+
         return ResponseEntity.ok(
-                productoService.obtenerProducto(id)
+                toModel(productoService.obtenerProducto(id))
         );
     }
 
@@ -90,7 +108,7 @@ public class ProductoController {
             @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<ProductoResponse> modificar(
+    public ResponseEntity<EntityModel<ProductoResponse>> modificar(
             @Parameter(
                     description = "Identificador único del producto a modificar",
                     example = "1",
@@ -99,8 +117,9 @@ public class ProductoController {
             @PathVariable Long id,
             @Valid @RequestBody ProductoRequest request
     ) {
+
         return ResponseEntity.ok(
-                productoService.modificar(id, request)
+                toModel(productoService.modificar(id, request))
         );
     }
 
@@ -121,7 +140,30 @@ public class ProductoController {
             )
             @PathVariable Long id
     ) {
+
         productoService.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private EntityModel<ProductoResponse> toModel(ProductoResponse producto) {
+
+        return EntityModel.of(
+                producto,
+
+                linkTo(ProductoController.class)
+                        .slash(producto.getId())
+                        .withSelfRel(),
+
+                linkTo(ProductoController.class)
+                        .withRel("productos"),
+
+                linkTo(ProductoController.class)
+                        .slash(producto.getId())
+                        .withRel("actualizar"),
+
+                linkTo(ProductoController.class)
+                        .slash(producto.getId())
+                        .withRel("eliminar")
+        );
     }
 }

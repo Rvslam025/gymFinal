@@ -10,11 +10,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("/api/tipos-membresias")
@@ -37,11 +41,14 @@ public class TipoMembresiaController {
             @ApiResponse(responseCode = "409", description = "El tipo de membresía ya existe")
     })
     @PostMapping
-    public ResponseEntity<TipoMembresiaResponse> crear(
+    public ResponseEntity<EntityModel<TipoMembresiaResponse>> crear(
             @Valid @RequestBody TipoMembresiaRequest request
     ) {
+
+        TipoMembresiaResponse tipoMembresia = tipoMembresiaService.crear(request);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(tipoMembresiaService.crear(request));
+                .body(toModel(tipoMembresia));
     }
 
     @Operation(
@@ -52,10 +59,21 @@ public class TipoMembresiaController {
             @ApiResponse(responseCode = "200", description = "Operación exitosa")
     })
     @GetMapping
-    public ResponseEntity<List<TipoMembresiaResponse>> obtenerTipoMembresias() {
-        return ResponseEntity.ok(
+    public ResponseEntity<CollectionModel<EntityModel<TipoMembresiaResponse>>> obtenerTipoMembresias() {
+
+        List<EntityModel<TipoMembresiaResponse>> tiposMembresias =
                 tipoMembresiaService.obtenerTipoMembresias()
-        );
+                        .stream()
+                        .map(this::toModel)
+                        .toList();
+
+        CollectionModel<EntityModel<TipoMembresiaResponse>> collection =
+                CollectionModel.of(tiposMembresias);
+
+        collection.add(linkTo(TipoMembresiaController.class).withSelfRel());
+        collection.add(linkTo(TipoMembresiaController.class).withRel("crear"));
+
+        return ResponseEntity.ok(collection);
     }
 
     @Operation(
@@ -67,7 +85,7 @@ public class TipoMembresiaController {
             @ApiResponse(responseCode = "404", description = "Tipo de membresía no encontrado")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<TipoMembresiaResponse> obtenerTipoMembresia(
+    public ResponseEntity<EntityModel<TipoMembresiaResponse>> obtenerTipoMembresia(
             @Parameter(
                     description = "ID del tipo de membresía",
                     example = "1",
@@ -75,8 +93,9 @@ public class TipoMembresiaController {
             )
             @PathVariable Long id
     ) {
+
         return ResponseEntity.ok(
-                tipoMembresiaService.obtenerTipoMembresia(id)
+                toModel(tipoMembresiaService.obtenerTipoMembresia(id))
         );
     }
 
@@ -90,7 +109,7 @@ public class TipoMembresiaController {
             @ApiResponse(responseCode = "404", description = "Tipo de membresía no encontrado")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<TipoMembresiaResponse> modificar(
+    public ResponseEntity<EntityModel<TipoMembresiaResponse>> modificar(
             @Parameter(
                     description = "ID del tipo de membresía a modificar",
                     example = "1",
@@ -99,8 +118,9 @@ public class TipoMembresiaController {
             @PathVariable Long id,
             @Valid @RequestBody TipoMembresiaRequest request
     ) {
+
         return ResponseEntity.ok(
-                tipoMembresiaService.modificar(id, request)
+                toModel(tipoMembresiaService.modificar(id, request))
         );
     }
 
@@ -121,7 +141,30 @@ public class TipoMembresiaController {
             )
             @PathVariable Long id
     ) {
+
         tipoMembresiaService.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private EntityModel<TipoMembresiaResponse> toModel(TipoMembresiaResponse tipoMembresia) {
+
+        return EntityModel.of(
+                tipoMembresia,
+
+                linkTo(TipoMembresiaController.class)
+                        .slash(tipoMembresia.getId())
+                        .withSelfRel(),
+
+                linkTo(TipoMembresiaController.class)
+                        .withRel("tipos-membresias"),
+
+                linkTo(TipoMembresiaController.class)
+                        .slash(tipoMembresia.getId())
+                        .withRel("actualizar"),
+
+                linkTo(TipoMembresiaController.class)
+                        .slash(tipoMembresia.getId())
+                        .withRel("eliminar")
+        );
     }
 }

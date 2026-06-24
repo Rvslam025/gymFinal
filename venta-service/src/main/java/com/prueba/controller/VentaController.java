@@ -10,11 +10,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("/api/ventas")
@@ -38,11 +42,14 @@ public class VentaController {
             @ApiResponse(responseCode = "409", description = "Stock insuficiente para realizar la venta")
     })
     @PostMapping
-    public ResponseEntity<VentaResponse> crear(
+    public ResponseEntity<EntityModel<VentaResponse>> crear(
             @Valid @RequestBody VentaRequest request
     ) {
+
+        VentaResponse venta = ventaService.crear(request);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ventaService.crear(request));
+                .body(toModel(venta));
     }
 
     @Operation(
@@ -53,10 +60,20 @@ public class VentaController {
             @ApiResponse(responseCode = "200", description = "Operación exitosa")
     })
     @GetMapping
-    public ResponseEntity<List<VentaResponse>> obtenerVentas() {
-        return ResponseEntity.ok(
-                ventaService.obtenerVentas()
-        );
+    public ResponseEntity<CollectionModel<EntityModel<VentaResponse>>> obtenerVentas() {
+
+        List<EntityModel<VentaResponse>> ventas = ventaService.obtenerVentas()
+                .stream()
+                .map(this::toModel)
+                .toList();
+
+        CollectionModel<EntityModel<VentaResponse>> collection =
+                CollectionModel.of(ventas);
+
+        collection.add(linkTo(VentaController.class).withSelfRel());
+        collection.add(linkTo(VentaController.class).withRel("crear"));
+
+        return ResponseEntity.ok(collection);
     }
 
     @Operation(
@@ -68,7 +85,7 @@ public class VentaController {
             @ApiResponse(responseCode = "404", description = "Venta no encontrada")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<VentaResponse> obtenerVenta(
+    public ResponseEntity<EntityModel<VentaResponse>> obtenerVenta(
             @Parameter(
                     description = "Identificador único de la venta",
                     example = "1",
@@ -76,8 +93,9 @@ public class VentaController {
             )
             @PathVariable Long id
     ) {
+
         return ResponseEntity.ok(
-                ventaService.obtenerVenta(id)
+                toModel(ventaService.obtenerVenta(id))
         );
     }
 
@@ -98,7 +116,26 @@ public class VentaController {
             )
             @PathVariable Long id
     ) {
+
         ventaService.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private EntityModel<VentaResponse> toModel(VentaResponse venta) {
+
+        return EntityModel.of(
+                venta,
+
+                linkTo(VentaController.class)
+                        .slash(venta.getId())
+                        .withSelfRel(),
+
+                linkTo(VentaController.class)
+                        .withRel("ventas"),
+
+                linkTo(VentaController.class)
+                        .slash(venta.getId())
+                        .withRel("eliminar")
+        );
     }
 }
